@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<style>
+canvas {
+    border:1px solid #d3d3d3;
+    background-color: #ffffff;
+}
+</style>
+</head>
+<body onload="startGame()">
+<script>
+
+var myGamePiece;
+var myBackground;
+var myObstacle;
+var mySound;
+var myMusic;
+
+function startGame() {
+    myBackground = new component(960, 540, "a/background.jpg", 0, 0, "image");
+    myGamePiece = new component(60, 60, "pr.png", 25, 455, "image");
+    myObstacle1  = new component(20, 920, "a/a.jpg", 0, 0, "image");
+    myObstacle2  = new component(940, 20, "a/b.jpg", 20, 0, "image");
+    myObstacle3  = new component(940, 20, "a/b.jpg", 20, 520, "image");
+    myObstacle4  = new component(20, 920, "a/a.jpg", 940, 0, "image");
+    myObstacle5  = new component(800, 40, "a/e.jpg", 140, 160, "image");
+    myObstacle6  = new component(800, 40, "a/e.jpg", 20, 340, "image");
+    myObstacle7  = new component(30, 30, "ob.jpg", 240, 0,"image");
+    myObstacle8  = new component(30, 30, "ob.jpg", 480, 540,"image");
+    myObstacle9  = new component(30, 30, "ob.jpg", 720, 0,"image");
+    myObstacle10 = new component(112, 140, "portal.jpg", 828, 20,"image")
+    mySound = new sound("audio/player_move.mp3");
+    myMusic = new sound("audio/background.mp3");
+    myMusic.play();
+    myGameArea.start();
+}
+
+var myGameArea = {
+    canvas : document.createElement("canvas"),
+    start : function() {
+        this.canvas.width = 960;
+        this.canvas.height = 540;
+        this.context = this.canvas.getContext("2d");
+        document.body.insertBefore(this.canvas, document.body.childNodes[0]);
+        this.interval = setInterval(updateGameArea, 20);
+    
+   window.addEventListener('keydown', function (e) {
+            myGameArea.keys = (myGameArea.keys || []);
+            myGameArea.keys[e.keyCode] = true;
+        })
+        window.addEventListener('keyup', function (e) {
+            myGameArea.keys[e.keyCode] = false; 
+        })
+    }, 
+    clear : function() {
+        this.context.clearRect(0, 0, this.canvas.width, this.canvas.height);
+    },
+    stop : function() {
+        clearInterval(this.interval);
+    }
+}
+
+function component(width, height, color, x, y, type) {
+    this.type = type;
+    if (type == "image") {
+    	this.image = new Image();
+    	this.image.src = color;
+  	}
+    this.width = width;
+    this.height = height;
+    this.speedX = 0;
+    this.speedY = 0;    
+    this.x = x;
+    this.y = y; 
+     this.update = function() {
+        ctx = myGameArea.context;
+        if (type == "image") {
+            ctx.drawImage(this.image, 
+                this.x, 
+                this.y,
+                this.width, this.height);
+        } else {
+            ctx.fillStyle = color;
+            ctx.fillRect(this.x, this.y, this.width, this.height);
+        }
+    }
+     this.crashWith = function(otherobj) {
+        var myleft = this.x;
+        var myright = this.x + (this.width);
+        var mytop = this.y;
+        var mybottom = this.y + (this.height);
+        var otherleft = otherobj.x;
+        var otherright = otherobj.x + (otherobj.width);
+        var othertop = otherobj.y;
+        var otherbottom = otherobj.y + (otherobj.height);
+        var crash = true;
+        if ((mybottom < othertop) ||
+               (mytop > otherbottom) ||
+               (myright < otherleft) ||
+               (myleft > otherright)) {
+           crash = false;
+		
+        }
+	 
+        return crash;
+    }
+}
+function sound(src) {
+    this.sound = document.createElement("audio");
+    this.sound.src = src;
+    this.sound.setAttribute("preload", "auto");
+    this.sound.setAttribute("controls", "none");
+    this.sound.style.display = "none";
+    document.body.appendChild(this.sound);
+    this.play = function(){
+        this.sound.play();
+    }
+    this.stop = function(){
+        this.sound.pause();
+    }    
+}
+
+function updateGameArea() {
+    if (myGamePiece.crashWith(myObstacle1)||myGamePiece.crashWith(myObstacle2)||myGamePiece.crashWith(myObstacle3)||myGamePiece.crashWith(myObstacle4)||myGamePiece.crashWith(myObstacle5)||myGamePiece.crashWith(myObstacle6)||myGamePiece.crashWith(myObstacle7)||myGamePiece.crashWith(myObstacle8)||myGamePiece.crashWith(myObstacle9)) {
+	ctx.font = "30px Comic Sans MS";
+	//ctx.fillStyle = "black";
+	//ctx.textAlign = "center";
+	//ctx.fillText("Game Over", myGameArea.canvas.width/2, myGameArea.canvas.height/2)
+	var e = confirm("you lost  !!! \npress ok to retry\npress cancel to exit ")
+ if (e) {
+        // user clicked "ok"
+		window.location="level1.html";
+    } else {
+        // user clicked "cancel"
+		window.location="main_menu.html";
+    }
+	myGameArea.stop();
+    } 
+	else if(myGamePiece.crashWith(myObstacle10))
+	{
+	/*ctx.font = "30px Comic Sans MS";
+	ctx.fillStyle = "black";
+	ctx.textAlign = "center";
+	ctx.fillText("Mission Acomplished", myGameArea.canvas.width/2, myGameArea.canvas.height/2)*/
+	var e = confirm("you win  !!! \npress ok for next level\npress cancel to replay ")
+ if (e) {
+        // user clicked "ok"
+		window.location="level2.html";
+    } else {
+        // user clicked "cancel"
+		window.location="level1.html";
+    }
+	myGameArea.stop();
+	}
+		
+	else {
+        myGameArea.clear();    
+        myBackground.update();
+        myObstacle1.update();
+        myObstacle2.update();
+        myObstacle3.update();
+        myObstacle4.update();
+        myObstacle5.update();
+        myObstacle6.update();
+	myObstacle7.update();
+	myObstacle8.update();
+	myObstacle9.update();
+	myObstacle10.update();
+	myObstacle7.speedY = 4;
+	myObstacle8.speedY =-4;
+	myObstacle9.speedY = 4;
+	myObstacle7.y += myObstacle7.speedY;
+	myObstacle8.y += myObstacle8.speedY;
+	myObstacle9.y += myObstacle9.speedY;
+	myObstacle10.x +=myObstacle10.speedX;
+        myGamePiece.x += myGamePiece.speedX;
+        myGamePiece.y += myGamePiece.speedY ;
+	if (myObstacle7.y == myGameArea.canvas.height) {
+            myObstacle7.y = 0 ;
+        } 
+        if (myObstacle8.y == 0) {
+            myObstacle8.y = 540 ;
+        } 
+	if (myObstacle9.y == myGameArea.canvas.height) {
+            myObstacle9.y = 0 ;
+        }	
+	myGamePiece.update();
+	if(myGamePiece.image.src ="fr.png"){myGamePiece.image.src = "pr.png"}
+	
+    }
+    myGamePiece.speedX = 0;
+    myGamePiece.speedY = 0;
+    if (myGameArea.keys && myGameArea.keys[37]) {myGamePiece.speedX = -2; myGamePiece.image.src = "fl.png";mySound.play();}
+    if (myGameArea.keys && myGameArea.keys[39]) {myGamePiece.speedX = 2;  myGamePiece.image.src = "fr.png";mySound.play();}
+    if (myGameArea.keys && myGameArea.keys[38]) {myGamePiece.speedY = -1; }
+    if (myGameArea.keys && myGameArea.keys[40]) {myGamePiece.speedY = 1;  }
+   
+}
+
+
+</script>
+<h4>Tony:Whats this J.A.R.V.I.S. Where am I???
+<p>J.A.R.V.I.S: Sir, this is an inergalactic energy band. It can affect your arc reactor from certain distance too.</p></h4> 
+</body>
+</html>

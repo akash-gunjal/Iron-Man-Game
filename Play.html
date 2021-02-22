@@ -1,0 +1,465 @@
+
+<canvas id="ctx" width=  "1200" height= "600" style=" background-color : #ffffff; border:1px solid #000000;"></canvas>
+
+<script>
+var ctx = document.getElementById("ctx").getContext("2d");
+ctx.font = '30px Arial';
+var freq=0;
+
+var start_time = Date.now();
+
+var stop=false;
+var HEIGHT = 600;
+var WIDTH = 1200;
+var bounce=0;
+var bulletlist={};
+var t;
+var Img = {};
+endgame=function(){clearInterval(t);}
+Img.player = new Image();
+Img.player.src = "img/player.gif";
+Img.player_l = new Image();
+Img.player_l.src = "img/player_l.gif";
+Img.player_r = new Image();
+Img.player_r.src = "img/player_r.gif";
+Img.enemy = new Image();
+Img.enemy.src = "img/enemy.gif";
+Img.gate= new Image();
+Img.gate.src = "img/gate.gif";
+Img.star= new Image();
+Img.star.src = "img/star.gif";
+Img.background = new Image();
+Img.background.src = "img/background.gif";
+var xr;
+function playSound(url){
+  var audio = document.createElement('audio');
+  audio.style.display = "none";
+  audio.src = url;
+  audio.autoplay = true;
+  audio.onended = function(){
+    audio.remove() //Remove when played.
+  };
+  document.body.appendChild(audio);
+
+}  playSound("audio/background.mp3");
+var player =
+	{
+        x:50,
+        spdX:30,
+        y:40,
+        spdY:5,
+        name:'P',
+        hp:10,
+        width:80,
+        height:100,
+        atkSpd:1,
+        attackCounter:0,
+        pressingDown:false,
+        pressingUp:false,
+        pressingLeft:false,
+        pressingRight:false,
+		img:Img.player,
+		aimangle:0,
+		life:2,
+		score:0,
+	};
+
+enemylist={};
+
+ enemy = function(id,x,y,spdx,spdy,radius,width,height,catagory,img)
+	{
+
+	var enemy1=	
+		{
+		x:x,
+		y:y,
+		spdx:spdx,	
+		spdy:spdy,	
+		id:id,
+		radius:radius,
+		width:width,
+		height :height,
+		img:img,
+		catagory:catagory,
+		aimangle:0,
+		};
+	
+	enemylist[id]=enemy1;
+	
+	}
+
+
+generateenemy = function(v)
+	{
+      
+        var x = Math.random()*WIDTH;
+        var y = Math.random()*HEIGHT;
+		 if(v==='enemy')
+       {
+	   var height =   160;  
+        var width = 80;
+        var id = Math.random();
+        var spdx = 5 + Math.random() * 5;
+        var spdy = 5 + Math.random() * 5;
+		enemy(id,x,y,spdx,spdy,0,width,height,'image',Img.enemy);
+		}
+		else if (v==='star'){
+		var height =   20;  
+        var width = 20;
+        var id = 'star';
+        var spdx = 0;
+        var spdy = 0;
+		enemy(id,x,y,spdx,spdy,0,width,height,'image',Img.star);
+		}
+        
+       
+	}
+	
+	generatebullet=function(smone,catagory)
+	{
+	xr = Math.random()*1;
+	
+	var attack={
+				x:smone.x,
+				y :smone.y,
+				height :10,
+				width : 10,
+				id : xr,
+				catagory:catagory,      
+				timer:0,
+				spdx  :Math.cos(smone.aimangle/180*Math.PI)*5,
+				spdy : Math.sin(smone.aimangle/180*Math.PI)*5,
+				};
+					
+	bulletlist[xr]=attack;
+	
+	}
+
+
+document.onclick = function(mouse)
+	{
+		generatebullet(player,'bullet');
+		playSound("audio/gun.mp3");
+		
+
+	}
+
+	//enemy('er1',300,0,0,0,0,20,400,'rectangle',Img.enemy);
+	//enemy('er2',600,200,0,0,0,20,400,'rectangle',Img.enemy);
+	//enemy('er3',900,0,0,0,0,20,400,'rectangle',Img.enemy);
+	 //enemy('er4',1100,100,8,9,0,500,5,'rectangle',Img.enemy);
+	 enemy('ei1',1000,500,0,4,0,80,160,'image',Img.enemy);
+	 enemy('ei2',700,80,0,4,0,80,160,'image',Img.enemy);
+	 enemy('gate',1100,50,0,0,0,80,160,'image',Img.gate);
+	//enemy('ec1',800,100,4,15,50,80,160,'circle',Img.enemy);
+	// enemy('ec2',100,900,5,4,25,100,100,'circle',Img.enemy);
+	//enemy('ec3',1050,100,4,4,50,100,100,'circle',Img.enemy);
+
+drawentity = function(something)
+	{
+       if(something.catagory === 'rectangle'||something.catagory === 'bullet'||something.catagory === 'bullet_e')
+		{
+		ctx.save();
+		if(something.catagory==='bullet_e')
+		{ctx.fillStyle = '#ff3333';}
+		else if(something.catagory==='rectangle')
+		{ctx.fillStyle = '#ff4500';}
+        else{ctx.fillStyle = '#ffff00';}
+        ctx.fillRect(something.x,something.y,something.width,something.height);
+        ctx.restore();
+		}
+		else if (something.catagory === 'circle')
+		{
+		ctx.beginPath();
+		ctx.arc(something.x,something.y,something.radius,0,2*Math.PI);
+		ctx.fillStyle = '#994c0';
+		ctx.fill();
+		ctx.stroke();
+		}
+		else if (something.catagory === 'image')
+		{
+		
+		 ctx.save();
+		 if(something.id==='gate')
+		 {
+		 ctx.drawImage(something.img,0,0,450,470,something.x-something.width/2,something.y-something.height/2,80,160);
+		 }else if(something.id==='star')
+		 {
+		 ctx.drawImage(something.img,0,0,206,212,something.x-something.width/2,something.y-something.height/2,20,20);
+		 }else{
+	     ctx.drawImage(something.img,0,0,639,589,something.x-something.width/2,something.y-something.height/2,80,160);
+				}
+				ctx.restore();
+		}
+	}
+			
+		
+updateentity = function (something)
+	{
+			something.x+=something.spdx;
+			something.y+=something.spdy;
+			
+				if(something.x-something.width/2 < 0 ||something.x+something.width/2>WIDTH){
+
+									something.spdx=-something.spdx;
+									}
+				
+				if(something.y-something.height/2 < 0 ||something.y+something.height/2>HEIGHT){
+
+									something.spdy=-something.spdy;
+									}
+		
+	}
+		
+			 
+testCollisionRectRect = function(rect1,rect2)
+	{
+        return (rect1.x <= rect2.x+rect2.width/2
+                && rect2.x <= rect1.x+rect1.width/2
+                && rect1.y <= rect2.y + rect2.height/2
+                && rect2.y <= rect1.y + rect1.height);
+	}
+
+
+repeat  = function(obj1,obj2){
+	if(bounce)	{
+/*	if (obj1.catagory!=='rectangle'&&obj2.catagory!=='rectangle'){ */
+	obj1.spdx=-obj1.spdx;
+		obj1.spdy=-obj1.spdy;
+		obj2.spdy=-obj2.spdy;
+		obj2.spdx=-obj2.spdx;
+	//}
+		bounce=0;	
+	}
+	}
+
+	
+document.onmousemove = function(mouse)
+	{
+        var mouseX = mouse.clientX - document.getElementById('ctx').getBoundingClientRect().left;
+        var mouseY = mouse.clientY - document.getElementById('ctx').getBoundingClientRect().top;
+       
+        mouseX -= player.x;
+        mouseY -= player.y;
+       
+        player.aimangle = (Math.atan2(mouseY,mouseX) / Math.PI * 180);
+	}
+ 
+	
+	document.onkeydown = function(event)
+	{
+        if(event.keyCode === 39)        
+                player.pressingRight = true;
+        else if(event.keyCode === 40)  
+                player.pressingDown = true;
+        else if(event.keyCode === 37) 
+                player.pressingLeft = true;
+        else if(event.keyCode === 38) 
+                player.pressingUp = true;
+	}
+ 
+document.onkeyup = function(event)
+	{
+        if(event.keyCode === 39)        
+                player.pressingRight = false;
+        else if(event.keyCode === 40)   
+                player.pressingDown = false;
+        else if(event.keyCode === 37) 
+                player.pressingLeft = false;
+        else if(event.keyCode === 38)                                       
+                player.pressingUp = false;
+	}
+ 
+updatePlayerPosition = function()
+	{
+        if(player.pressingRight){
+                player.x +=5;
+				ctx.save();
+				ctx.drawImage(Img.player_r,0,0,1209,2211,player.x-player.width/2,player.y-player.height/2,80,120);
+			ctx.restore();
+				}
+        else if(player.pressingLeft){
+                player.x -=5;
+				ctx.save();
+				ctx.drawImage(Img.player_l,0,0,1209,2211,player.x-player.width/2,player.y-player.height/2,80,120);
+			ctx.restore();
+				}
+        else if(player.pressingDown){
+                player.y +=5;
+				ctx.save();
+				ctx.drawImage(Img.player,0,0,480,789,player.x-player.width/2,player.y-player.height/2,80,120);
+			ctx.restore();
+				}
+       else if(player.pressingUp){
+                player.y -=5;
+				ctx.save();
+				ctx.drawImage(Img.player,0,0,480,789,player.x-player.width/2,player.y-player.height/2,80,120);
+			ctx.restore();
+							}else{ctx.save();
+				ctx.drawImage(Img.player,0,0,480,789,player.x-player.width/2,player.y-player.height/2,80,120);
+			ctx.restore();}
+							
+        //ispositionvalid
+        if(player.x < player.width/2)
+                player.x = player.width/2;
+        if(player.x > WIDTH-player.width/2)
+                player.x = WIDTH - player.width/2;
+        if(player.y < player.height/2)
+                player.y = player.height/2;
+        if(player.y > HEIGHT - player.height/2)
+                player.y = HEIGHT - player.height/2;
+       
+       
+	}
+update = function()
+	{			
+		freq++;
+        ctx.clearRect(0,0,WIDTH,HEIGHT);
+		 ctx.drawImage(Img.background,0,0,WIDTH,HEIGHT);
+	updatePlayerPosition();
+			collision=false;
+			ctx.save();
+			ctx.fillStyle="white";
+		ctx.fillText("life : "+ player.life ,60,90);
+		ctx.fillText("score : "+ player.score ,160,90);
+		ctx.restore();
+		if(player.life===0)
+			{	var e = confirm("you lost  !!! \npress ok to retry\npress cancel to exit ")
+	if (e) {
+        // user clicked "ok"
+		window.location="level5.html";
+    } else {
+        // user clicked "cancel"
+		window.location="game/main_menu.html";
+    }
+				endgame();
+			}
+		for(var key in enemylist)
+		{	
+			enemylist[key].aimangle=Math.atan2(player.x,enemylist[key].y);
+			
+			
+			
+			
+			//for(var key in enemylist)
+			/*{bounce= testCollisionRectRect(enemylist[sm],enemylist[key]);
+				//	if(bounce)repeat(enemylist[sm],enemylist[key]);
+				}*/
+		var collision = false;
+		var bullet_attack = false;
+
+		collision= testCollisionRectRect(enemylist[key],player);
+			
+            if(collision)
+				{ 
+                 
+				 if(enemylist[key].id === 'gate')
+				{
+					var e = confirm("mission complete   !!! \npress ok for main menu\npress cancel to replay ")
+ if (e) {
+        // user clicked "ok"
+		window.location="main_menu.html";
+    } else {
+        // user clicked "cancel"
+		window.location="level5.html";
+    }
+					endgame();
+				}
+				else if(enemylist[key].id === 'star')
+				{
+				delete enemylist[key];
+				player.life = player.life + 1;
+				}
+				
+				else if(enemylist[key].catagory !== 'rectangle')
+				{ delete enemylist[key];
+				player.life = player.life - 1;
+				}else{
+				player.x-=10;
+				player.life = player.life - 1;
+					}
+				 break;
+                }
+				
+				for(var xy in bulletlist)
+				{
+					var remove=false;
+					bulletlist[xy].timer++;
+					
+					if(bulletlist[xy].timer > 150)
+						{
+                        remove = true;
+						}
+						
+					collision = false;
+					if(bulletlist[xy].catagory==='bullet')
+						{	if(		enemylist[key].catagory === 'rectangle'
+								||	enemylist[key].id === 'gate')
+							{}
+							else
+						{
+							collision= testCollisionRectRect(enemylist[key],bulletlist[xy]);}
+						}
+						
+					if(collision )    
+						{     
+							player.score+=10;           
+                            delete enemylist[key];
+							delete bulletlist[xy];
+                            break;
+						}
+					else if (remove)
+						{
+							delete bulletlist[xy]; break;remove=false;
+						}
+						
+					if(bulletlist[xy].catagory==='bullet_e')
+						{
+						bullet_attack= testCollisionRectRect(player,bulletlist[xy]);
+						}
+					if(bullet_attack )    
+						{  
+							bullet_attack = false;				
+                            player.life = player.life - 1;
+							delete bulletlist[xy];
+                            break;
+						}
+						updateentity(bulletlist[xy]);
+						drawentity(bulletlist[xy]);		
+				}
+			if(!collision)
+					{
+					updateentity(enemylist[key]);
+					drawentity(enemylist[key]);
+					}
+		}
+		if(freq%50==0)
+		{
+			for(var key1 in enemylist)
+			{	if(enemylist[key1].id === 'gate'||enemylist[key1].id === 'star'){}
+			else if(enemylist[key1].catagory === 'rectangle'){}
+			else {enemylist[key1].aimangle=180-(Math.atan((enemylist[key1].y-player.y)/(enemylist[key1].x-player.x))*180/Math.PI);
+			generatebullet(enemylist[key1],'bullet_e');
+			}
+			}
+		}
+		if(freq%200==0)
+			{
+				 generateenemy('star');
+				
+			}
+		if(freq%200==0)
+			{
+				freq=0; 
+				//generateenemy('enemy');
+				//generateenemy('enemy');
+				
+			}
+	}
+ 
+			
+t=setInterval(update,25);
+			
+ 
+</script>
+

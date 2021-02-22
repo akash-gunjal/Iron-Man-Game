@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<style>
+canvas {
+    border:1px solid #d3d3d3;
+    background-color: #ffffff;
+}
+</style>
+</head>
+<body onload="startGame()">
+<script>
+
+var myGamePiece;
+var myBackground;
+var myObstacle;
+var mySound;
+var myMusic;
+
+
+function startGame() {
+    myGamePiece = new component(60, 60, "pr.png", 25, 455, "image");
+    myBackground = new component(960, 540, "c/orion.jpg", 0, 0, "image");
+    myObstacle1  = new component(20, 920, "c/a.jpg", 0, 0, "image");
+    myObstacle2  = new component(940, 20, "c/b.jpg", 20, 0, "image");
+    myObstacle3  = new component(940, 20, "c/b.jpg", 20, 520, "image");
+    myObstacle4  = new component(20, 920, "c/a.jpg", 940, 0, "image");
+    myObstacle5  = new component(90, 35, "c/enemyr.png", 20, 290, "image");
+    myObstacle6  = new component(400, 40, "black", 20, 340);
+    myObstacle7  = new component(20, 40, "ob.jpg", 360, 0,"image");
+    myObstacle8  = new component(90, 35, "c/enemyl.png", 830, 200,"image");
+    myObstacle9  = new component(40, 40, "ob.jpg", 470, 0,"image");
+    myObstacle10 = new component(40, 40, "c/laser.png", 20, 290, "image");
+    myObstacle11 = new component(40, 40, "c/laser.png", 920, 190, "image");
+    myObstacle12 = new component(70, 100, "portal.jpg", 20, 20, "image");
+    myObstacle13 = new component(400, 40, "black", 540, 340);		 
+    mySound = new sound("bounce.mp3");
+    myMusic = new sound("gametheme.mp3");
+    myMusic.play();
+    myGameArea.start();
+}
+
+var myGameArea = {
+    canvas : document.createElement("canvas"),
+    start : function() {
+        this.canvas.width = 960;
+        this.canvas.height = 540;
+        this.context = this.canvas.getContext("2d");
+        document.body.insertBefore(this.canvas, document.body.childNodes[0]);
+        this.interval = setInterval(updateGameArea, 20);
+    
+   window.addEventListener('keydown', function (e) {
+            myGameArea.keys = (myGameArea.keys || []);
+            myGameArea.keys[e.keyCode] = true;
+        })
+        window.addEventListener('keyup', function (e) {
+            myGameArea.keys[e.keyCode] = false; 
+        })
+    }, 
+    clear : function() {
+        this.context.clearRect(0, 0, this.canvas.width, this.canvas.height);
+    },
+    stop : function() {
+        clearInterval(this.interval);
+    }
+}
+
+function component(width, height, color, x, y, type) {
+    this.type = type;
+    if (type == "image") {
+    	this.image = new Image();
+    	this.image.src = color;
+  	}
+    this.width = width;
+    this.height = height;
+    this.speedX = 0;
+    this.speedY = 0;    
+    this.x = x;
+    this.y = y; 
+     this.update = function() {
+        ctx = myGameArea.context;
+        if (type == "image") {
+            ctx.drawImage(this.image, 
+                this.x, 
+                this.y,
+                this.width, this.height);
+        } else {
+            ctx.fillStyle = color;
+            ctx.fillRect(this.x, this.y, this.width, this.height);
+        }
+    }
+     this.crashWith = function(otherobj) {
+        var myleft = this.x;
+        var myright = this.x + (this.width);
+        var mytop = this.y;
+        var mybottom = this.y + (this.height);
+        var otherleft = otherobj.x;
+        var otherright = otherobj.x + (otherobj.width);
+        var othertop = otherobj.y;
+        var otherbottom = otherobj.y + (otherobj.height);
+        var crash = true;
+        if ((mybottom < othertop) ||
+               (mytop > otherbottom) ||
+               (myright < otherleft) ||
+               (myleft > otherright)) {
+           crash = false;
+		
+        }
+	 
+        return crash;
+    }
+}
+function sound(src) {
+    this.sound = document.createElement("audio");
+    this.sound.src = src;
+    this.sound.setAttribute("preload", "auto");
+    this.sound.setAttribute("controls", "none");
+    this.sound.style.display = "none";
+    document.body.appendChild(this.sound);
+    this.play = function(){
+        this.sound.play();
+    }
+    this.stop = function(){
+        this.sound.pause();
+    }    
+}
+
+function updateGameArea() {
+    if (myGamePiece.crashWith(myObstacle1)||myGamePiece.crashWith(myObstacle2)||myGamePiece.crashWith(myObstacle3)||myGamePiece.crashWith(myObstacle4)||myGamePiece.crashWith(myObstacle5)||myGamePiece.crashWith(myObstacle6)||myGamePiece.crashWith(myObstacle7)||myGamePiece.crashWith(myObstacle8)||myGamePiece.crashWith(myObstacle9)||myGamePiece.crashWith(myObstacle10)||myGamePiece.crashWith(myObstacle11)||myGamePiece.crashWith(myObstacle13)) {
+	ctx.font = "30px Comic Sans MS";
+	ctx.fillStyle = "black";
+	ctx.textAlign = "center";
+	ctx.fillText("Game Over", myGameArea.canvas.width/2, myGameArea.canvas.height/2)
+	myGameArea.stop();
+    } 
+
+    else if(myGamePiece.crashWith(myObstacle12))
+	{
+	ctx.font = "30px Comic Sans MS";
+	ctx.fillStyle = "black";
+	ctx.textAlign = "center";
+	ctx.fillText("Mission Acomplished", myGameArea.canvas.width/2, myGameArea.canvas.height/2)
+	myGameArea.stop();
+	}
+	
+		
+	else {
+        myGameArea.clear();
+        myBackground.update();
+        myObstacle1.update();
+        myObstacle2.update();
+        myObstacle3.update();
+        myObstacle4.update();
+        myObstacle5.update();
+        myObstacle6.update();
+	myObstacle7.update();
+	myObstacle8.update();
+	myObstacle9.update();
+	myObstacle10.update();
+	myObstacle11.update();
+	myObstacle12.update();
+	myObstacle13.update();
+	myObstacle7.speedY = 3;
+	myObstacle9.speedY = 1;
+	myObstacle10.speedX = 4;
+	myObstacle11.speedX = -2;
+	myObstacle7.y += myObstacle7.speedY;
+	myObstacle9.y += myObstacle9.speedY;
+	myObstacle10.x +=myObstacle10.speedX;
+	myObstacle11.x +=myObstacle11.speedX;
+        myGamePiece.x += myGamePiece.speedX;
+        myGamePiece.y += myGamePiece.speedY ;
+	if (myObstacle7.y == myGameArea.canvas.height) {
+            myObstacle7.y = 0 ;
+        } 
+        	if (myObstacle9.y == myGameArea.canvas.height) {
+            myObstacle9.y = 0 ;
+        } 
+	if (myObstacle10.x == 960){
+            myObstacle10.x = 0;
+        } 	
+	if(myObstacle11.x == 0){
+            myObstacle11.x = 920;
+        } 
+	myGamePiece.update();
+	if(myGamePiece.image.src ="fr.png"){myGamePiece.image.src = "pr.png"}
+	
+    }
+    myGamePiece.speedX = 0;
+    myGamePiece.speedY = 0;
+    if (myGameArea.keys && myGameArea.keys[37]) {myGamePiece.speedX = -2; myGamePiece.image.src = "fl.png";mySound.play();}
+    if (myGameArea.keys && myGameArea.keys[39]) {myGamePiece.speedX = 2;  myGamePiece.image.src = "fr.png";mySound.play();}
+    if (myGameArea.keys && myGameArea.keys[38]) {myGamePiece.speedY = -1; }
+    if (myGameArea.keys && myGameArea.keys[40]) {myGamePiece.speedY = 1;  }
+   
+}
+
+
+</script>
+
+</body>
+</html>
